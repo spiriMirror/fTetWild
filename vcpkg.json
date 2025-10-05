@@ -1,0 +1,55 @@
+{
+    "builtin-baseline": "dd3097e305afa53f7b4312371f62058d2e665320",
+    "dependencies": [
+        {
+            "name": "pkgconf",
+            "version>=": "2.2.0"
+        },
+        {
+            "name": "gmp",
+            "version>=": "6.3.0#3"
+        },
+        {
+            "name": "fmt",
+            "version>=": "10.2.1"
+        },
+        {
+            "name": "spdlog",
+            "version>=": "1.12.0"
+        },
+        {
+            "name": "geogram",
+            "version>=": "1.9.3"
+        },
+        {
+            "name": "tbb",
+            "version>=": "2021.11.0"
+        },
+        {
+            "name": "nlohmann-json",
+            "version>=": "3.11.2"
+        },
+        {
+            "name": "cli11",
+            "version>=": "2.5.0"
+        },
+        {
+            "name": "eigen3",
+            "version>=": "3.4.0"
+        },
+        {
+            "name": "catch2",
+            "version>=": "3.5.4"
+        }
+    ],
+    "overrides": [
+        {
+            "name": "fmt",
+            "version": "10.2.1"
+        },
+        {
+            "name": "spdlog",
+            "version": "1.12.0"
+        }
+    ]
+}

@@ -9,7 +9,8 @@
 #include <CLI/CLI.hpp>
 
 #ifdef FLOAT_TETWILD_USE_TBB
-#include <tbb/task_scheduler_init.h>
+#include <tbb/global_control.h>
+#include <tbb/parallel_for.h>
 #include <thread>
 #endif
 
@@ -24,15 +25,11 @@
 #include <floattetwild/Mesh.hpp>
 #include <floattetwild/MeshIO.hpp>
 
-#include <Eigen/Dense>
 #include <floattetwild/Logger.hpp>
+#include <floattetwild/Types.hpp>
 
 #include <igl/Timer.h>
 #include <igl/write_triangle_mesh.h>
-
-#ifdef LIBIGL_WITH_TETGEN
-#include <igl/copyleft/tetgen/tetrahedralize.h>
-#endif
 
 #include <geogram/basic/command_line.h>
 #include <geogram/basic/command_line_args.h>
@@ -41,7 +38,6 @@
 #include <bitset>
 
 using namespace floatTetWild;
-using namespace Eigen;
 
 class GeoLoggerForward : public GEO::LoggerClient
 {
@@ -94,6 +90,7 @@ void connect_2_meshes(std::string m1, std::string m2, std::string m);
 // extern "C" void exactinit();
 int main(int argc, char** argv)
 {
+    using namespace floatTetWild;
 #ifdef STORE_SAMPLE_POINTS
     cout << "STORE_SAMPLE_POINTS defined" << endl;
 #endif
@@ -268,19 +265,12 @@ int main(int argc, char** argv)
     }
 
 #ifdef FLOAT_TETWILD_USE_TBB
-    const size_t MB          = 1024 * 1024;
-    const size_t stack_size  = 64 * MB;
     unsigned int num_threads = std::max(1u, std::thread::hardware_concurrency());
     num_threads              = std::min(max_threads, num_threads);
     params.num_threads       = num_threads;
     std::cout << "TBB threads " << num_threads << std::endl;
-    tbb::task_scheduler_init scheduler(num_threads, stack_size);
+    tbb::global_control control {tbb::global_control::max_allowed_parallelism, num_threads};
 #endif
-
-    //    if(params.is_quiet){
-    //        std::streambuf *orig_buf = cout.rdbuf();
-    //        cout.rdbuf(NULL);
-    //    }
 
     Logger::init(!params.is_quiet, params.log_path);
     params.log_level = std::max(0, std::min(6, params.log_level));
@@ -323,8 +313,8 @@ int main(int argc, char** argv)
     if (V_in.rows() != 0 && T_in.rows() != 0 && values.rows() != 0) {
         params.apply_sizing_field = true;
 
-        params.V_sizing_field = V_in;
-        params.T_sizing_field = T_in;
+        params.V_sizing_field      = V_in;
+        params.T_sizing_field      = T_in;
         params.values_sizing_field = values;
     }
 
@@ -640,49 +630,3 @@ int main(int argc, char** argv)
 
     return EXIT_SUCCESS;
 }
-
-//#include <igl/readSTL.h>
-//#include <igl/writeSTL.h>
-//#include <igl/writeOFF.h>
-// void connect_2_meshes(std::string m1, std::string m2, std::string m) {
-//    Eigen::MatrixXd v1, v2, _;
-//    Eigen::MatrixXi f1, f2;
-//
-//    igl::readSTL(m1, v1, f1, _);
-//    igl::readSTL(m2, v2, f2, _);
-//
-//    MatrixXd V(v1.rows() + v2.rows(), v1.cols());
-//    V << v1, v2;
-//
-//    int v1_rows = v1.rows();
-//    for (int i = 0; i < f2.rows(); i++) {
-//        for (int j = 0; j < 3; j++)
-//            f2(i, j) += v1_rows;
-//    }
-//    MatrixXi F(f1.rows() + f2.rows(), f1.cols());
-//    F << f1, f2;
-//
-////    igl::writeOFF(m+".off", V, F);
-//    igl::writeSTL(m+".stl", V, F);
-//    std::ofstream fout(m+"_tags.txt");
-//    for (int i = 0; i < f1.rows(); i++)
-//        fout << 1 << endl;
-//    for (int i = 0; i < f2.rows(); i++)
-//        fout << 2 << endl;
-//    fout.close();
-//
-//    //pausee();
-//}
-//
-//#include <igl/readMESH.h>
-// void test_manifold(std::string& file_name){
-//    Eigen::MatrixXd V;
-//    Eigen::MatrixXi T, F;
-//    igl::readMESH(file_name, V, T, F);
-//
-//    Mesh mesh;
-//
-//    Eigen::MatrixXd V_sf;
-//    Eigen::MatrixXi F_sf;
-//    manifold_surface(mesh, V_sf, F_sf);
-//}

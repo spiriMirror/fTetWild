@@ -8,12 +8,12 @@
 
 #include <floattetwild/AABBWrapper.h>
 #include <floattetwild/FloatTetDelaunay.h>
+#include <floattetwild/LocalOperations.h>
 #include <floattetwild/MeshImprovement.h>
 #include <floattetwild/Parameters.h>
 #include <floattetwild/Simplification.h>
-#include <floattetwild/TriangleInsertion.h>
-#include <floattetwild/LocalOperations.h>
 #include <floattetwild/Statistics.h>
+#include <floattetwild/TriangleInsertion.h>
 #include <geogram/mesh/mesh_reorder.h>
 #include <geogram/mesh/mesh_repair.h>
 #include <igl/Timer.h>
@@ -52,7 +52,7 @@ int tetrahedralization(GEO::Mesh&       sf_mesh,
         return EXIT_FAILURE;
     }
 
-    AABBWrapper      tree(sf_mesh);
+    AABBWrapper tree(sf_mesh);
 #ifdef NEW_ENVELOPE
     tree.init_sf_tree(input_vertices, input_faces, params.eps);
 #endif
@@ -128,7 +128,8 @@ int tetrahedralization(GEO::Mesh&       sf_mesh,
     //////////////////////////////////////
 
     timer.start();
-    optimization(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, {{1, 1, 1, 1}});
+    optimization(
+      input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, {{1, 1, 1, 1}});
     logger().info("mesh optimization {}s", timer.getElapsedTimeInSec());
     logger().info("");
     stats().record(StateInfo::optimization_id,
@@ -144,24 +145,28 @@ int tetrahedralization(GEO::Mesh&       sf_mesh,
 
     timer.start();
     if (boolean_op < 0) {
-//        filter_outside(mesh);
+        //        filter_outside(mesh);
         if (params.smooth_open_boundary) {
             smooth_open_boundary(mesh, tree);
-            for (auto &t: mesh.tets) {
+            for (auto& t : mesh.tets) {
                 if (t.is_outside)
                     t.is_removed = true;
             }
-        } else {
-            if(!params.disable_filtering) {
-                if(params.use_floodfill) {
+        }
+        else {
+            if (!params.disable_filtering) {
+                if (params.use_floodfill) {
                     filter_outside_floodfill(mesh);
-                } else if(params.use_input_for_wn){
+                }
+                else if (params.use_input_for_wn) {
                     filter_outside(mesh, input_vertices, input_faces);
-                } else
+                }
+                else
                     filter_outside(mesh);
             }
         }
-    } else {
+    }
+    else {
         boolean_operation(mesh, boolean_op);
     }
     stats().record(StateInfo::wn_id,
