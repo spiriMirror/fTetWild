@@ -11,6 +11,9 @@ class FtetWild::Impl
                            Eigen::MatrixXi&       OutT,
                            const Parameters&      parms)
     {
+        spdlog::error("TODO: NOT FULLY IMPLEMENTED YET!");
+        std::abort();
+
         floatTetWild::Parameters this_parms;
         GEO::Mesh                mesh;
         mesh.vertices.create_vertices(InputV.rows());
