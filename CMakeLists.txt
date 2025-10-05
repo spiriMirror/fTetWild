@@ -15,22 +15,24 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-# Prepend function
-include(PrependCurrentPath)
-
-# FloatTetwild utils
-include(FloatTetwildUtils)
-
 include(Warnings)
 
-# Sort projects inside the solution
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+# spdlog
+find_package(spdlog CONFIG REQUIRED)
 
-# Generate position independent code by default
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+# Geogram
+find_package(geogram CONFIG REQUIRED)
 
-# Setup dependencies
-include(FloatTetwildDependencies)
+# TBB
+find_package(TBB CONFIG REQUIRED)
+
+# C++11 threads
+find_package(Threads REQUIRED)
+
+if(FLOAT_TETWILD_TOPLEVEL_PROJECT)
+    find_package(CLI11 CONFIG REQUIRED)
+endif()
+
 
 # ###############################################################################
 # FloatTetwild library
@@ -39,17 +41,20 @@ include(FloatTetwildDependencies)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(gmp REQUIRED IMPORTED_TARGET gmp)
 
-add_library(${PROJECT_NAME} STATIC)
+add_library(FloatTetwild STATIC)
 
 # PUBLIC include directory for FloatTetwild
-target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/include)
+target_include_directories(FloatTetwild PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 add_subdirectory(external/libigl)
 add_subdirectory(external/predicates)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC libigl predicates)
+# Other sources
+add_subdirectory(src)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC
+target_link_libraries(FloatTetwild PUBLIC libigl predicates)
+
+target_link_libraries(FloatTetwild PUBLIC
     Geogram::geogram
     spdlog::spdlog
     Threads::Threads
@@ -59,10 +64,10 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 
 if(MSVC)
     # /source-charset:utf-8
-    target_compile_options(${PROJECT_NAME} PUBLIC /source-charset:utf-8)
+    target_compile_options(FloatTetwild PUBLIC /source-charset:utf-8)
 endif()
 
-target_compile_definitions(${PROJECT_NAME} PUBLIC FLOAT_TETWILD_USE_TBB)
+target_compile_definitions(FloatTetwild PUBLIC FLOAT_TETWILD_USE_TBB)
 
 
 # ###############################################################################
@@ -71,7 +76,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC FLOAT_TETWILD_USE_TBB)
 
 add_library(ftetwild SHARED)
 
-target_link_libraries(ftetwild PRIVATE ${PROJECT_NAME})
+target_link_libraries(ftetwild PRIVATE FloatTetwild)
 
 find_package(Eigen3 CONFIG REQUIRED)
 
@@ -93,25 +98,30 @@ target_include_directories(ftetwild PUBLIC
 
 # Main executable
 if(FLOAT_TETWILD_TOPLEVEL_PROJECT)
-    add_executable(${PROJECT_NAME}_bin src/main.cpp)
-    target_compile_features(${PROJECT_NAME}_bin PRIVATE ${CXX14_FEATURES})
+    # Json
+    find_package(nlohmann_json CONFIG REQUIRED)
 
-    target_link_libraries(${PROJECT_NAME}_bin
+    add_executable(FloatTetwild_bin)
+
+    target_sources(FloatTetwild_bin PRIVATE src/main.cpp)
+    
+    target_compile_features(FloatTetwild_bin PRIVATE ${CXX14_FEATURES})
+
+    target_link_libraries(FloatTetwild_bin
         PRIVATE
-        ${PROJECT_NAME}
+        FloatTetwild
         CLI11::CLI11
         nlohmann_json::nlohmann_json
     )
 
-    target_compile_definitions(${PROJECT_NAME}_bin PRIVATE FLOAT_TETWILD_USE_TBB)
+    target_compile_definitions(FloatTetwild_bin PRIVATE FLOAT_TETWILD_USE_TBB)
 endif()
 
 # ###############################################################################
 # Subdirectories
 # ###############################################################################
 
-# Other sources
-add_subdirectory(src)
+
 
 # Compile extras only if this is a top-level project
 if(FLOAT_TETWILD_TOPLEVEL_PROJECT)

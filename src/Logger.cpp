@@ -9,10 +9,10 @@
 // Created by Jeremie Dumas on 09/04/18.
 //
 
-#include "Logger.hpp"
 #include <spdlog/async.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
+#include <floattetwild/Logger.hpp>
 #include <memory>
 #include <vector>
 
