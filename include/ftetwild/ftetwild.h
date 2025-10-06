@@ -12,8 +12,6 @@ enum class BooleanOp
     Difference   = 2
 };
 
-class FtetWild;
-
 class FLOAT_TETWILD_API Parameters
 {
   public:
@@ -54,7 +52,6 @@ class FLOAT_TETWILD_API Parameters
     uint32_t max_threads() const;
 
   private:
-    friend class FtetWild;
     class Impl;
     Impl* impl;
 };
