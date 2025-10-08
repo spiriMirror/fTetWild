@@ -1,6 +1,5 @@
 #pragma once
-#include <floattetwild/Parameters.h>
-#include <ftetwild/dll_export.h>
+#include <ftetwild/dllexport.h>
 #include <Eigen/Core>
 
 namespace ftetwild {
