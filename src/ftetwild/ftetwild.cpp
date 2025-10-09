@@ -1,3 +1,4 @@
+#include <floattetwild/FloatTetDelaunay.h>
 #include <floattetwild/FloatTetwild.h>
 #include <ftetwild/ftetwild.h>
 #include <tbb/global_control.h>
@@ -20,7 +21,7 @@ class Parameters::Impl
 
     bool is_quiet = false;
 
-    int log_level = 3;
+    int log_level = 2;
 
     bool manifold_surface = false;
 
@@ -75,6 +76,7 @@ static void fill_parameters(floatTetWild::Parameters& dst, const Parameters& src
     dst.is_quiet         = src.is_quiet();
     dst.log_level        = src.log_level();
     dst.manifold_surface = src.manifold_surface();
+    floatTetWild::logger().set_level(static_cast<spdlog::level::level_enum>(dst.log_level));
 
 #ifdef FLOAT_TETWILD_USE_TBB
     unsigned int num_threads = std::max(1u, std::thread::hardware_concurrency());
@@ -93,6 +95,8 @@ class FtetWild::Impl
                            Eigen::MatrixXi&       OutT,
                            const Parameters&      parms)
     {
+        GEO::initialize();
+
         GEO::Mesh mesh;
         mesh.vertices.create_vertices(InputV.rows());
         for (int i = 0; i < InputV.rows(); i++) {
@@ -117,7 +121,7 @@ class FtetWild::Impl
             }
         }
         else {
-            spdlog::error("InputF should have 3 or 4 columns.");
+            floatTetWild::logger().error("InputF should have 3 or 4 columns.");
             return EXIT_FAILURE;
         }
 

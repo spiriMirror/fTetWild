@@ -8,6 +8,7 @@
 
 #include <floattetwild/EdgeCollapsing.h>
 #include <floattetwild/LocalOperations.h>
+#include <floattetwild/Logger.hpp>
 
 #include <floattetwild/MeshImprovement.h>  //todo: tmp
 
@@ -118,8 +119,8 @@ void edge_collapsing_aux(Mesh&                            mesh,
             counter++;
         }
 
-        cout << "success(env) = " << suc_counter_env << endl;
-        cout << "success = " << suc_counter << "(" << counter << ")" << endl;
+        logger().info("success(env) = {}", suc_counter_env);
+        logger().info("success = {}({})", suc_counter, counter);
 
 #if EC_POSTPROCESS
         if (suc_counter == 0)
@@ -323,11 +324,7 @@ int floatTetWild::collapse_an_edge(Mesh&                            mesh,
     vector_unique(n1_v_ids);
 
     // update tags
-    //    cout<<"n12_t_ids = ";
-    //    vector_print(n12_t_ids, " ");
-
     for (int t_id : n12_t_ids) {
-        //        cout<<"t_id = "<<t_id<<endl;
         int sf_facing_v1   = NOT_SURFACE;
         int sf_facing_v2   = NOT_SURFACE;
         int tag_facing_v1  = NO_SURFACE_TAG;
@@ -392,20 +389,6 @@ int floatTetWild::collapse_an_edge(Mesh&                            mesh,
                              tet_vertices[tets[t_id][mod4(j12[mod2(i + 1)] + 2)]].conn_tets,
                              tet_vertices[tets[t_id][mod4(j12[mod2(i + 1)] + 3)]].conn_tets,
                              pair);
-            //            if(!(pair.size() == 1 || pair.size() == 2)) {
-            //                cout << "!(pair.size() == 1 || pair.size() == 2)" << endl;
-            //                cout << "******"<<mod4(j12[mod2(i + 1)] + 1) << endl;
-            //                vector_print(tet_vertices[tets[t_id][mod4(j12[mod2(i + 1)] +
-            //                1)]].conn_tets, " "); cout << endl; cout << "******"<<mod4(j12[mod2(i
-            //                + 1)] + 2) << endl;
-            //                vector_print(tet_vertices[tets[t_id][mod4(j12[mod2(i + 1)] +
-            //                2)]].conn_tets, " "); cout << endl; cout << "******"<<mod4(j12[mod2(i
-            //                + 1)] + 3) << endl;
-            //                vector_print(tet_vertices[tets[t_id][mod4(j12[mod2(i + 1)] +
-            //                3)]].conn_tets, " "); cout << endl; cout << "******" << endl;
-            //                vector_print(pair, " ");
-            //                //pausee();
-            //            }
             if (pair.size() > 1) {
                 int opp_t_id = pair[0] == t_id ? pair[1] : pair[0];
                 for (int j = 0; j < 4; j++) {

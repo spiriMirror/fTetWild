@@ -17,4 +17,8 @@ foreach(source IN ITEMS ${test_sources})
     source_group("tests" FILES "${source}")
 endforeach()
 
-target_link_libraries(unit_tests PRIVATE FloatTetwild Catch2::Catch2WithMain warnings::all)
+target_link_libraries(unit_tests PRIVATE 
+    ftetwild
+    FloatTetwild
+    Catch2::Catch2WithMain 
+    warnings::all)

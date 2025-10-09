@@ -1004,13 +1004,6 @@ void floatTetWild::set_intersection_sorted(const std::vector<int>& s1,
 void floatTetWild::pausee(std::string msg)
 {
     return;
-    // if (!msg.empty())
-    //     cout << msg << endl;
-    // cout << "Is pausing... (Enter '0' to exit and other characters to continue.)" << endl;
-    // char c = ' ';
-    // std::cin >> c;
-    // if (c == '0')
-    //     exit(0);
 }
 
 bool floatTetWild::is_energy_unstable(const std::array<Scalar, 12>& T, Scalar res)
@@ -1054,26 +1047,6 @@ Scalar floatTetWild::AMIPS_energy(const std::array<Scalar, 12>& T)
     }
 
     if (res > 1e8) {
-        //        //fortest
-        //        if (res > 1e10) {
-        //            cout << std::setprecision(16) << res << endl;
-        //            for (int i = 0; i < T.size(); i++) {
-        //                if (i % 3 == 0)
-        //                    cout << endl;
-        //                cout << T[i] << ", ";
-        //            }
-        //            cout << endl;
-        //            char c;
-        //            cin >> c;
-        //        }
-        //        //fortest
-
-        //        //fortest
-        //        cnt_large++;
-        //        if(!is_energy_unstable(T, res)){
-        //            cout<<(cnt_stable++)<<"/"<<cnt_large<<endl;
-        //        }
-        //        //fortest
 
         if (is_degenerate(Vector3(T[0], T[1], T[2]),
                           Vector3(T[3], T[4], T[5]),

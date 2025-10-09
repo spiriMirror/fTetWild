@@ -29,6 +29,7 @@
 #include <floattetwild/Types.hpp>
 
 #include <igl/Timer.h>
+#include <sstream>
 #include <igl/write_triangle_mesh.h>
 
 #include <geogram/basic/command_line.h>
@@ -92,7 +93,7 @@ int main(int argc, char** argv)
 {
     using namespace floatTetWild;
 #ifdef STORE_SAMPLE_POINTS
-    cout << "STORE_SAMPLE_POINTS defined" << endl;
+    logger().info("STORE_SAMPLE_POINTS defined");
 #endif
 
     //    connect_2_meshes("/Users/yixinhu/Downloads/test_cutting/100729.stl",
@@ -117,26 +118,7 @@ int main(int argc, char** argv)
     //    for(int i=0;i<n;i++){
     ////        edges[i] = {{edges[i][1], edges[i][0]}};
     //        sum += edges[i][0]%4;
-    ////        for(int j=0;j<4;j++)
-    ////            sum+=edges[i][mod2(j)];
-    //    }
-    //    cout<<sum<<endl;
-    //    cout<<test_timer.getElapsedTime()<<endl;
-    //
-    //    for(int i=0;i<n;i++){
-    ////        edges[i] = {{rand() % 30, rand() % 30}};
-    //        edges[i] = {{rand() % 7, rand() % 7}};
-    //    }
-    //    test_timer.start();
-    //    int sum1 = 0;
-    //    for(int i=0;i<n;i++){
-    ////        std::swap(edges[i][0], edges[i][1]);
-    //        sum1 += mod4(edges[i][0]);
-    ////        for(short int j=0;j<4;j++)
-    ////            sum1+=edges[i][mod2(j)];
-    //    }
-    //    cout<<sum1<<endl;
-    //    cout<<test_timer.getElapsedTime()<<endl;
+
     //
     //    return 0;
 
@@ -150,9 +132,10 @@ int main(int argc, char** argv)
     std::vector<int> indices(20);
     std::iota(std::begin(indices), std::end(indices), 0);
     floatTetWild::Random::shuffle(indices);
+    std::ostringstream oss;
     for (int a : indices)
-        std::cout << a << " ";
-    std::cout << std::endl;
+        oss << a << " ";
+    logger().info("Indices: {}", oss.str());
 
     // Import standard command line arguments, and custom ones
     GEO::CmdLine::import_arg_group("standard");
@@ -268,7 +251,7 @@ int main(int argc, char** argv)
     unsigned int num_threads = std::max(1u, std::thread::hardware_concurrency());
     num_threads              = std::min(max_threads, num_threads);
     params.num_threads       = num_threads;
-    std::cout << "TBB threads " << num_threads << std::endl;
+    logger().info("TBB threads {}", num_threads);
     tbb::global_control control {tbb::global_control::max_allowed_parallelism, num_threads};
 #endif
 

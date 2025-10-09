@@ -22,6 +22,11 @@ target_include_directories(ftetwild PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
+if (FLOAT_TETWILD_BUILD_TESTS)
+    add_executable(ftetwild_test test/main.cpp)
+    target_link_libraries(ftetwild_test PRIVATE ftetwild)
+endif()
+
 # Install
 include(GNUInstallDirs)
 
