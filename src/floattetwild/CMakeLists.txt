@@ -52,8 +52,3 @@ set(SOURCES
 )
 
 target_sources(FloatTetwild PRIVATE ${SOURCES})
-
-if(MSVC)
-    # /source-charset:utf-8
-    target_compile_options(FloatTetwild PUBLIC /source-charset:utf-8)
-endif()
