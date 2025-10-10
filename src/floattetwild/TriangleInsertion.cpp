@@ -479,24 +479,12 @@ void floatTetWild::insert_triangles_aux(const std::vector<Vector3>&  input_verti
                     b_edges2,
                     mesh,
                     tree);
-    // fortest: output and check
-    //    output_surface(mesh, mesh.params.output_path+"_"+mesh.params.postfix+"_surface.stl");
+
     logger().info("mark_surface_fs done");
 
     /////
     // build b_tree using b_edges
     tree.init_tmp_b_mesh_and_tree(input_vertices, input_faces, b_edges1, mesh, b_edges2);
-    //    for (int v_id = 0; v_id < mesh.tet_vertices.size(); v_id++) {
-    //        if (mesh.tet_vertices[v_id].is_removed)
-    //            continue;
-    //        if (!mesh.tet_vertices[v_id].is_on_boundary)
-    //            continue;
-    //
-    //        GEO::index_t prev_facet;
-    //        if (tree.is_out_tmp_b_envelope(mesh.tet_vertices[v_id].pos, mesh.params.eps_2,
-    //        prev_facet))
-    //            mesh.tet_vertices[v_id].is_on_boundary = false;
-    //    }
 
 #ifdef FLOAT_TETWILD_USE_TBB
     tbb::parallel_for(size_t(0), mesh.tets.size(), [&](size_t i) {
@@ -516,35 +504,6 @@ void floatTetWild::insert_triangles_aux(const std::vector<Vector3>&  input_verti
     if (std::count(is_face_inserted.begin(), is_face_inserted.end(), false) == 0)
         mesh.is_input_all_inserted = true;
     logger().info("#b_edge1 = {}, #b_edges2 = {}", b_edges1.size(), b_edges2.size());
-
-    //    ///fortest
-    //    Eigen::MatrixXd V(input_vertices.size(), 3);
-    //    Eigen::MatrixXi F(std::count(is_face_inserted.begin(), is_face_inserted.end(), false), 3);
-    //    for (int i = 0; i < input_vertices.size(); i++)
-    //        V.row(i) = input_vertices[i];
-    //    int cnt = 0;
-    //    for (int i = 0; i < input_faces.size(); i++) {
-    //        if (is_face_inserted[i])
-    //            continue;
-    //        F.row(cnt) << input_faces[i][0], input_faces[i][1], input_faces[i][2];
-    //        cnt++;
-    //    }
-    //    igl::writeSTL(mesh.params.output_path+"_"+mesh.params.postfix+"_uninserted.stl", V, F);
-    //    //
-    //    std::ofstream fout(mesh.params.output_path+"_"+mesh.params.postfix+"_b_es.obj");
-    //    for(int i=0;i<tree.tmp_b_mesh.vertices.nb();i++){
-    //        fout<<"v "<<tree.tmp_b_mesh.vertices.point(i)[0]<<" "
-    //                <<tree.tmp_b_mesh.vertices.point(i)[1]<<" "
-    //                <<tree.tmp_b_mesh.vertices.point(i)[2]<<endl;
-    //    }
-    //    for(int i=0;i<tree.tmp_b_mesh.facets.nb();i++) {
-    //        fout << "l " << tree.tmp_b_mesh.facets.vertex(i, 1) + 1 << " "
-    //             << tree.tmp_b_mesh.facets.vertex(i, 2) + 1 << endl;
-    //    }
-    //    fout.close();
-    //    //fortest
-
-    pausee();
 }
 
 bool floatTetWild::insert_multi_triangles(

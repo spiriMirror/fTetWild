@@ -112,6 +112,9 @@ void floatTetWild::simplify(std::vector<Vector3>&  input_vertices,
             F.row(i) = input_faces[i];
         }
         if (!params.output_path.empty()) {
+            auto abs_path = std::filesystem::absolute(params.output_path + "_" + params.postfix +
+                                                      "_simplify.off");
+            logger().info("Outputting simplified surface mesh to {}", abs_path.string());
             igl::writeOFF(params.output_path + "_" + params.postfix + "_simplify.off", V, F);
         }
     }

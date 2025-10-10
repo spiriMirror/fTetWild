@@ -5,7 +5,6 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at http://mozilla.org/MPL/2.0/.
 //
-
 #include <floattetwild/MeshImprovement.h>
 
 #include <floattetwild/EdgeCollapsing.h>
@@ -14,6 +13,7 @@
 #include <floattetwild/LocalOperations.h>
 #include <floattetwild/Parameters.h>
 #include <floattetwild/VertexSmoothing.h>
+#include <floattetwild/bfs_orient.h>
 #include <floattetwild/MeshIO.hpp>
 // #include <floattetwild/FastWindingNumber.hpp>
 #include <floattetwild/CSGTreeParser.hpp>
@@ -62,7 +62,12 @@ void floatTetWild::init(Mesh& mesh, AABBWrapper& tree)
     }
 
     if (mesh.params.log_level < 3) {
-        output_surface(mesh, mesh.params.output_path + "_" + mesh.params.postfix + "_cutting");
+        if (!mesh.params.output_path.empty()) {
+            auto abs_path = std::filesystem::absolute(mesh.params.output_path + "_" +
+                                                      mesh.params.postfix + "_cutting");
+            logger().info("Cutting outputting to {}", abs_path.string());
+            output_surface(mesh, abs_path.string());
+        }
         output_info(mesh, tree);
         int    v_num, t_num;
         double max_energy, avg_energy;
@@ -538,7 +543,12 @@ void floatTetWild::output_info(Mesh& mesh, const AABBWrapper& tree)
     int cnt_t = mesh.get_t_num();
 
     if (mesh.params.log_level > 1) {
-        output_surface(mesh, mesh.params.output_path + "_" + mesh.params.postfix + "_opt");
+        if (!mesh.params.output_path.empty()) {
+            auto abs_path = std::filesystem::absolute(mesh.params.output_path + "_" +
+                                                      mesh.params.postfix + "_opt");
+            logger().info("Optimization outputting to {}", abs_path.string());
+            output_surface(mesh, mesh.params.output_path + "_" + mesh.params.postfix + "_opt");
+        }
         return;
     }
 
@@ -557,9 +567,9 @@ void floatTetWild::output_info(Mesh& mesh, const AABBWrapper& tree)
     }
     vector_unique(faces);
     int euler = cnt_v - edges.size() + faces.size() - cnt_t;
-        if (euler != 1) {
-            logger().info("euler error {}", euler);
-        }    // inversion
+    if (euler != 1) {
+        logger().info("euler error {}", euler);
+    }  // inversion
     for (int i = 0; i < tets.size(); i++) {
         if (tets[i].is_removed)
             continue;
@@ -628,16 +638,26 @@ void floatTetWild::output_info(Mesh& mesh, const AABBWrapper& tree)
 
         for (int j = 0; j < 4; j++) {
             if (tets[i].is_surface_fs[j] != NOT_SURFACE && tets[i].is_bbox_fs[j] != NOT_BBOX) {
-                logger().error("tets[i].is_surface_fs[j] != NOT_SURFACE && tets[i].is_bbox_fs[j] != NOT_BBOX");
+                logger().error(
+                  "tets[i].is_surface_fs[j] != NOT_SURFACE && tets[i].is_bbox_fs[j] != NOT_BBOX");
                 logger().error("tet {} face {}", i, j);
             }
             if (tets[i].is_surface_fs[j] != NOT_SURFACE) {
                 for (int k = 0; k < 3; k++) {
                     if (!tet_vertices[tets[i][(j + 1 + k) % 4]].is_on_surface) {
                         logger().error("is_surface_fs error");
-                        logger().error("t {}: {} {} {} {}", i, tets[i][0], tets[i][1], tets[i][2], tets[i][3]);
-                        logger().error("surface_fs: {} {} {} {}", tets[i].is_surface_fs[0], tets[i].is_surface_fs[1], tets[i].is_surface_fs[2], tets[i].is_surface_fs[3]);
-                        logger().error("is_on_surface: {} {} {} {}", tet_vertices[tets[i][0]].is_on_surface, tet_vertices[tets[i][1]].is_on_surface, tet_vertices[tets[i][2]].is_on_surface, tet_vertices[tets[i][3]].is_on_surface);
+                        logger().error(
+                          "t {}: {} {} {} {}", i, tets[i][0], tets[i][1], tets[i][2], tets[i][3]);
+                        logger().error("surface_fs: {} {} {} {}",
+                                       tets[i].is_surface_fs[0],
+                                       tets[i].is_surface_fs[1],
+                                       tets[i].is_surface_fs[2],
+                                       tets[i].is_surface_fs[3]);
+                        logger().error("is_on_surface: {} {} {} {}",
+                                       tet_vertices[tets[i][0]].is_on_surface,
+                                       tet_vertices[tets[i][1]].is_on_surface,
+                                       tet_vertices[tets[i][2]].is_on_surface,
+                                       tet_vertices[tets[i][3]].is_on_surface);
                     }
                 }
             }
@@ -646,9 +666,18 @@ void floatTetWild::output_info(Mesh& mesh, const AABBWrapper& tree)
                 for (int k = 0; k < 3; k++) {
                     if (!tet_vertices[tets[i][(j + 1 + k) % 4]].is_on_bbox) {
                         logger().error("is_bbox_fs error");
-                        logger().error("t {}: {} {} {} {}", i, tets[i][0], tets[i][1], tets[i][2], tets[i][3]);
-                        logger().error("bbox_fs: {} {} {} {}", (int)tets[i].is_bbox_fs[0], (int)tets[i].is_bbox_fs[1], (int)tets[i].is_bbox_fs[2], (int)tets[i].is_bbox_fs[3]);
-                        logger().error("is_on_bbox: {} {} {} {}", tet_vertices[tets[i][0]].is_on_bbox, tet_vertices[tets[i][1]].is_on_bbox, tet_vertices[tets[i][2]].is_on_bbox, tet_vertices[tets[i][3]].is_on_bbox);
+                        logger().error(
+                          "t {}: {} {} {} {}", i, tets[i][0], tets[i][1], tets[i][2], tets[i][3]);
+                        logger().error("bbox_fs: {} {} {} {}",
+                                       (int)tets[i].is_bbox_fs[0],
+                                       (int)tets[i].is_bbox_fs[1],
+                                       (int)tets[i].is_bbox_fs[2],
+                                       (int)tets[i].is_bbox_fs[3]);
+                        logger().error("is_on_bbox: {} {} {} {}",
+                                       tet_vertices[tets[i][0]].is_on_bbox,
+                                       tet_vertices[tets[i][1]].is_on_bbox,
+                                       tet_vertices[tets[i][2]].is_on_bbox,
+                                       tet_vertices[tets[i][3]].is_on_bbox);
                         pausee();
                     }
                 }
@@ -687,9 +716,22 @@ void floatTetWild::output_info(Mesh& mesh, const AABBWrapper& tree)
             if (!is_found) {
                 logger().error("is_on_bbox error");
                 for (int t_id : tet_vertices[i].conn_tets) {
-                    logger().error("t {}: {} {} {} {}", t_id, tets[t_id][0], tets[t_id][1], tets[t_id][2], tets[t_id][3]);
-                    logger().error("bbox_fs: {} {} {} {}", tets[t_id].is_bbox_fs[0], tets[t_id].is_bbox_fs[1], tets[t_id].is_bbox_fs[2], tets[t_id].is_bbox_fs[3]);
-                    logger().error("is_on_bbox: {} {} {} {}", tet_vertices[tets[t_id][0]].is_on_bbox, tet_vertices[tets[t_id][1]].is_on_bbox, tet_vertices[tets[t_id][2]].is_on_bbox, tet_vertices[tets[t_id][3]].is_on_bbox);
+                    logger().error("t {}: {} {} {} {}",
+                                   t_id,
+                                   tets[t_id][0],
+                                   tets[t_id][1],
+                                   tets[t_id][2],
+                                   tets[t_id][3]);
+                    logger().error("bbox_fs: {} {} {} {}",
+                                   tets[t_id].is_bbox_fs[0],
+                                   tets[t_id].is_bbox_fs[1],
+                                   tets[t_id].is_bbox_fs[2],
+                                   tets[t_id].is_bbox_fs[3]);
+                    logger().error("is_on_bbox: {} {} {} {}",
+                                   tet_vertices[tets[t_id][0]].is_on_bbox,
+                                   tet_vertices[tets[t_id][1]].is_on_bbox,
+                                   tet_vertices[tets[t_id][2]].is_on_bbox,
+                                   tet_vertices[tets[t_id][3]].is_on_bbox);
                 }
             }
         }
@@ -707,31 +749,53 @@ void floatTetWild::output_info(Mesh& mesh, const AABBWrapper& tree)
             if (!is_found) {
                 logger().error("is_on_surface error");
                 for (int t_id : tet_vertices[i].conn_tets) {
-                    logger().error("t {}: {} {} {} {}", t_id, tets[t_id][0], tets[t_id][1], tets[t_id][2], tets[t_id][3]);
-                    logger().error("surface_fs: {} {} {} {}", tets[t_id].is_surface_fs[0], tets[t_id].is_surface_fs[1], tets[t_id].is_surface_fs[2], tets[t_id].is_surface_fs[3]);
-                    logger().error("is_on_surface: {} {} {} {}", tet_vertices[tets[t_id][0]].is_on_surface, tet_vertices[tets[t_id][1]].is_on_surface, tet_vertices[tets[t_id][2]].is_on_surface, tet_vertices[tets[t_id][3]].is_on_surface);
+                    logger().error("t {}: {} {} {} {}",
+                                   t_id,
+                                   tets[t_id][0],
+                                   tets[t_id][1],
+                                   tets[t_id][2],
+                                   tets[t_id][3]);
+                    logger().error("surface_fs: {} {} {} {}",
+                                   tets[t_id].is_surface_fs[0],
+                                   tets[t_id].is_surface_fs[1],
+                                   tets[t_id].is_surface_fs[2],
+                                   tets[t_id].is_surface_fs[3]);
+                    logger().error("is_on_surface: {} {} {} {}",
+                                   tet_vertices[tets[t_id][0]].is_on_surface,
+                                   tet_vertices[tets[t_id][1]].is_on_surface,
+                                   tet_vertices[tets[t_id][2]].is_on_surface,
+                                   tet_vertices[tets[t_id][3]].is_on_surface);
                 }
             }
         }
     }
     logger().debug("");
 
-    output_surface(mesh, mesh.params.output_path + "_" + mesh.params.postfix + "_opt");
-
-    std::ofstream fout(mesh.params.output_path + "_" + mesh.params.postfix + "_b_vs.xyz");
-    for (auto& v : mesh.tet_vertices) {
-        if (v.is_removed || !v.is_on_boundary)
-            continue;
-        fout << v.pos[0] << " " << v.pos[1] << " " << v.pos[2] << endl;
+    if (!mesh.params.output_path.empty()) {
+        {
+            auto opt_file_name = mesh.params.output_path + "_" + mesh.params.postfix + "_opt.info";
+            auto abs_file_name = std::filesystem::absolute(opt_file_name);
+            logger().info("Detailed info outputting to {}", abs_file_name.string());
+            output_surface(mesh, opt_file_name);
+        }
+        {
+            auto xyz_file_name = mesh.params.output_path + "_" + mesh.params.postfix + "_b_vs.xyz";
+            auto abs_xyz_file_name = std::filesystem::absolute(xyz_file_name);
+            logger().info("Boundary vertices outputting to {}", abs_xyz_file_name.string());
+            std::ofstream fout(abs_xyz_file_name);
+            for (auto& v : mesh.tet_vertices) {
+                if (v.is_removed || !v.is_on_boundary)
+                    continue;
+                fout << v.pos[0] << " " << v.pos[1] << " " << v.pos[2] << endl;
+            }
+            fout.close();
+        }
     }
-    fout.close();
-
     return;
 }
 
 void floatTetWild::check_envelope(Mesh& mesh, const AABBWrapper& tree)
 {
-
     //    Scalar check_eps = mesh.params.eps_input * mesh.params.eps_input;
     Scalar check_eps = mesh.params.eps_2;
 
@@ -1033,9 +1097,13 @@ void floatTetWild::get_tracked_surface(Mesh&                                    
         F_sf.resize(0, 3);
         bfs_orient(F, F_sf, _1);
     }
-    igl::writeSTL(
-      mesh.params.output_path + "_" + mesh.params.postfix + "_tracked_surface.stl", V_sf, F_sf);
 
+    if (!mesh.params.output_path.empty()) {
+        auto abs_file_name = std::filesystem::absolute(
+          mesh.params.output_path + "_" + mesh.params.postfix + "_tracked_surface.obj");
+        logger().info("Tracked surface outputting to {}", abs_file_name.string());
+        igl::writeSTL(abs_file_name.string(), V_sf, F_sf);
+    }
 #undef SF_CONDITION
 }
 
@@ -1481,10 +1549,10 @@ void floatTetWild::mark_outside(Mesh& mesh, bool invert_faces)
 
 void floatTetWild::untangle(Mesh& mesh)
 {
-    auto&               tet_vertices = mesh.tet_vertices;
-    auto&               tets         = mesh.tets;
-    static const Scalar zero_area    = 1e2 * SCALAR_ZERO_2;
-    static const std::vector<std::array<int, 4>> face_pairs = {
+    auto&                                        tet_vertices = mesh.tet_vertices;
+    auto&                                        tets         = mesh.tets;
+    static const Scalar                          zero_area    = 1e2 * SCALAR_ZERO_2;
+    static const std::vector<std::array<int, 4>> face_pairs   = {
       {{0, 1, 2, 3}}, {{0, 2, 1, 3}}, {{0, 3, 1, 2}}};
 
     int cnt = 0;
@@ -1915,8 +1983,7 @@ void floatTetWild::manifold_edges(Mesh& mesh)
                         tet_queue.push(opp_t_id);
                         is_visited[opp_t_id] = true;
                     }
-                    else {
-                    }
+                    else {}
                 }
             }
         }
